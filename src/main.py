@@ -27,6 +27,10 @@ import actionlib
 # GoalID
 from actionlib_msgs.msg import *
 
+from clever import srv
+from std_srvs.srv import Trigger
+get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
+
 # https://dev.to/karn/building-a-simple-state-machine-in-python
 
 class AbstractState(object):
@@ -95,6 +99,19 @@ class IDLE(AbstractState):
                 json.dump(my_poses, outfile)
         else:
 #            _tbot.sendMessage(CHAT_ID, 'Ошибка 3! Некорректная команда: ' + command)
+
+class FLY(AbstractState):
+    def run(self, _sm):
+
+class CHARGING(AbstractState):
+    def run(self, _sm):
+        while True:
+            time.sleep(1)
+            if get_telemetry.voltage < 15.2:
+                rospy.loginfo("Low Battery, I need to go home, I'll be back")
+                _sm.new_state(LANDING(_sm))
+                break
+
 
 class DELIVERY(AbstractState):
     def run(self, _sm):
@@ -261,13 +278,13 @@ def main():
 #    st = StateMachine()
     navigator = GoToPose()
 
-    global TOKEN
+#    global TOKEN
 #    global CHAT_ID
-    global PROXY
-    TOKEN = load_param('~token')
+#    global PROXY
+#    TOKEN = load_param('~token')
 #    CHAT_ID = load_param('~chat_id')
-    PROXY = load_param('~proxy', None)
-    if PROXY != None: telepot.api.set_proxy(PROXY)
+#    PROXY = load_param('~proxy', None)
+#    if PROXY != None: telepot.api.set_proxy(PROXY)
 
 #    global _tbot
 #    _tbot = telepot.Bot(TOKEN)
