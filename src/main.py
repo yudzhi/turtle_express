@@ -29,7 +29,6 @@ from actionlib_msgs.msg import *
 
 from clever import srv
 from std_srvs.srv import Trigger
-get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
 
 # https://dev.to/karn/building-a-simple-state-machine-in-python
 
@@ -105,12 +104,17 @@ class FLY(AbstractState):
 
 class CHARGING(AbstractState):
     def run(self, _sm):
+        global telem
         while True:
+            telem = get_telemetry()
             time.sleep(1)
-            if get_telemetry.voltage < 15.2:
+            if telem.voltage < 15.2:
                 rospy.loginfo("Low Battery, I need to go home, I'll be back")
                 _sm.new_state(LANDING(_sm))
                 break
+
+    def exec_command(self, array_command):
+        print "Рабочий день окончен, я иду домой: " + array_command[0]
 
 
 class DELIVERY(AbstractState):
@@ -264,6 +268,8 @@ def main():
     rospy.loginfo('Inited node turtle_express')
     rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, get_cur_pose)
 
+    get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
+    
     global my_poses
     global file_points
     file_points = "./urpylka_points.json"
