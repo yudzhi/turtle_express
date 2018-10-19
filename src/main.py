@@ -13,8 +13,8 @@ import traceback
 
 import os, json
 
-import telepot
-from telepot.loop import MessageLoop
+#import telepot
+#from telepot.loop import MessageLoop
 
 import rospy
 # Header
@@ -76,17 +76,17 @@ class IDLE(AbstractState):
         print "Command: " + array_command[0]
         command = array_command[0]
         if command == '/status':
-            say("Отвали человек, мой статус недоступен")
-            _tbot.sendMessage(CHAT_ID, "Здесь должен быть статус (заряд батареи)")
+#            say("Отвали человек, мой статус недоступен")
+#            _tbot.sendMessage(CHAT_ID, "Здесь должен быть статус (заряд батареи)")
         elif command == '/go':
-            say("Опять эти кожаные уюлюдки нарезали мне задач")
-            _tbot.sendMessage(CHAT_ID, "Доставка пива в дом" + array_command[1])
+#            say("Опять эти кожаные уюлюдки нарезали мне задач")
+#            _tbot.sendMessage(CHAT_ID, "Доставка пива в дом" + array_command[1])
             global cur_pose
             cur_pose = array_command[1]
             self.stop_state = True
         elif command == '/save':
-            say("Я запомнил, где ты живешь")
-            _tbot.sendMessage(CHAT_ID, "Запомнить где находится дом " + array_command[1])
+#            say("Я запомнил, где ты живешь")
+#            _tbot.sendMessage(CHAT_ID, "Запомнить где находится дом " + array_command[1])
             global my_poses
             global temp_pose
             my_poses[array_command[1]] = temp_pose
@@ -94,7 +94,7 @@ class IDLE(AbstractState):
             with open(file_points, 'w') as outfile:
                 json.dump(my_poses, outfile)
         else:
-            _tbot.sendMessage(CHAT_ID, 'Ошибка 3! Некорректная команда: ' + command)
+#            _tbot.sendMessage(CHAT_ID, 'Ошибка 3! Некорректная команда: ' + command)
 
 class DELIVERY(AbstractState):
     def run(self, _sm):
@@ -146,13 +146,13 @@ class StateMachine(object):
         self.state.exec_command(array)
 
 
-def say(word):
-    espeak.set_voice("ru")
-    espeak.set_parameter(espeak.Parameter.Rate, 10, False)
-    espeak.rate = 40
-    espeak.synth(word)
-
-    time.sleep(3)
+#def say(word):
+#    espeak.set_voice("ru")
+#    espeak.set_parameter(espeak.Parameter.Rate, 10, False)
+#    espeak.rate = 40
+#    espeak.synth(word)
+#
+#    time.sleep(3)
 
 
 class GoToPose():
@@ -203,9 +203,9 @@ class GoToPose():
 
 temp_pose = None
 my_poses = None
-st = None
-_tbot = None
-CHAT_ID = None
+#st = None
+#_tbot = None
+#CHAT_ID = None
 navigator = None
 
 def get_cur_pose(data):
@@ -217,19 +217,19 @@ def handle(msg):
     хендлер выполняется в отдельном потоке,
     вызывается событием на подобие блокирующей очереди
     """
-    content_type, chat_type, chat_id = telepot.glance(msg)
-    print(content_type, chat_type, chat_id)
-    global CHAT_ID
-    global _tbot
-    global st
+#    content_type, chat_type, chat_id = telepot.glance(msg)
+#    print(content_type, chat_type, chat_id)
+#    global CHAT_ID
+#    global _tbot
+#    global st
 
-    if chat_id == CHAT_ID:
-        if content_type == 'text':
-            st.new_command(msg['text'])
-        else:
-            _tbot.sendMessage(CHAT_ID, "Ошибка 2! Неверный тип: только text и location")
-    else:
-        _tbot.sendMessage(CHAT_ID, "Ошибка 1! Access error!")
+#    if chat_id == CHAT_ID:
+#        if content_type == 'text':
+#            st.new_command(msg['text'])
+#        else:
+#            _tbot.sendMessage(CHAT_ID, "Ошибка 2! Неверный тип: только text и location")
+#    else:
+#        _tbot.sendMessage(CHAT_ID, "Ошибка 1! Access error!")
 
 def load_param(param, default=None):
     if rospy.has_param(param):
@@ -256,23 +256,23 @@ def main():
     except:
         my_poses = dict()
 
-    global st
+#    global st
     global navigator
-    st = StateMachine()
+#    st = StateMachine()
     navigator = GoToPose()
 
     global TOKEN
-    global CHAT_ID
+#    global CHAT_ID
     global PROXY
     TOKEN = load_param('~token')
-    CHAT_ID = load_param('~chat_id')
+#    CHAT_ID = load_param('~chat_id')
     PROXY = load_param('~proxy', None)
     if PROXY != None: telepot.api.set_proxy(PROXY)
 
-    global _tbot
-    _tbot = telepot.Bot(TOKEN)
-    _tbot.sendMessage(CHAT_ID, "I am online")
-    MessageLoop(_tbot, handle).run_as_thread()
+#    global _tbot
+#    _tbot = telepot.Bot(TOKEN)
+#    _tbot.sendMessage(CHAT_ID, "I am online")
+#    MessageLoop(_tbot, handle).run_as_thread()
 
     rospy.spin()
 
