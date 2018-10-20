@@ -6,6 +6,8 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 from espeak import espeak
+#Charging
+from sensor_msgs.msg import BatteryState
 
 import time
 import threading
@@ -106,12 +108,16 @@ class CHARGING(AbstractState):
     def run(self, _sm):
         global telem
         while True:
-            telem = get_telemetry()
+#            telem = get_telemetry()
             time.sleep(1)
-            if telem.voltage < 15.2:
-                rospy.loginfo("Low Battery, I need to go home, I'll be back")
-                _sm.new_state(LANDING(_sm))
-                break
+            try:
+                if battery.voltage < 15.2:
+                    rospy.loginfo("Low Battery, I need to go home, I'll be back")
+                    _sm.new_state(LANDING(_sm))
+                    break
+            except:
+                rospy.loginfo("Battery Error")
+
 
     def exec_command(self, array_command):
         print "Рабочий день окончен, я иду домой: " + array_command[0]
@@ -228,6 +234,7 @@ my_poses = None
 #_tbot = None
 #CHAT_ID = None
 navigator = None
+battery = None
 
 def get_cur_pose(data):
     global temp_pose
@@ -263,13 +270,17 @@ def load_param(param, default=None):
         return None
         # raise SystemExit
 
+def battery_update(data):
+    global battery
+    battery = data
+
 def main():
     rospy.init_node('turtle_express')
     rospy.loginfo('Inited node turtle_express')
     rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, get_cur_pose)
+    rospy.Subscriber('/mavros/battery', BatteryState, battery_update)
+#    get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
 
-    get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
-    
     global my_poses
     global file_points
     file_points = "./urpylka_points.json"
