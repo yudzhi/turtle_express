@@ -5,9 +5,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-from espeak import espeak
+#from espeak import espeak
 #Charging
-from sensor_msgs.msg import BatteryState
+#from sensor_msgs.msg import BatteryState
 
 import time
 import threading
@@ -28,6 +28,8 @@ from move_base_msgs.msg import *
 import actionlib
 # GoalID
 from actionlib_msgs.msg import *
+#Charging
+from sensor_msgs.msg import BatteryState
 
 from clever import srv
 from std_srvs.srv import Trigger
@@ -61,6 +63,12 @@ class AbstractState(object):
         Returns the name of the State.
         """
         return self.__class__.__name__
+
+class BatteryMonitor(AbstractState):
+    def run(self):
+        while True:
+            if
+    
 
 class INIT(AbstractState):
     def run(self, _sm):
@@ -103,21 +111,6 @@ class IDLE(AbstractState):
 
 class FLY(AbstractState):
     def run(self, _sm):
-
-class CHARGING(AbstractState):
-    def run(self, _sm):
-        global telem
-        while True:
-#            telem = get_telemetry()
-            time.sleep(1)
-            try:
-                if battery.voltage < 15.2:
-                    rospy.loginfo("Low Battery, I need to go home, I'll be back")
-                    _sm.new_state(LANDING(_sm))
-                    break
-            except:
-                rospy.loginfo("Battery Error")
-
 
     def exec_command(self, array_command):
         print "Рабочий день окончен, я иду домой: " + array_command[0]
@@ -249,15 +242,15 @@ def handle(msg):
 #    print(content_type, chat_type, chat_id)
 #    global CHAT_ID
 #    global _tbot
-#    global st
+    global st
 
-#    if chat_id == CHAT_ID:
-#        if content_type == 'text':
-#            st.new_command(msg['text'])
-#        else:
-#            _tbot.sendMessage(CHAT_ID, "Ошибка 2! Неверный тип: только text и location")
-#    else:
-#        _tbot.sendMessage(CHAT_ID, "Ошибка 1! Access error!")
+    if chat_id == CHAT_ID:
+        if content_type == 'text':
+            st.new_command(msg['text'])
+        else:
+            _tbot.sendMessage(CHAT_ID, "Ошибка 2! Неверный тип: только text и location")
+    else:
+        _tbot.sendMessage(CHAT_ID, "Ошибка 1! Access error!")
 
 def load_param(param, default=None):
     if rospy.has_param(param):
@@ -274,12 +267,13 @@ def battery_update(data):
     global battery
     battery = data
 
+
 def main():
     rospy.init_node('turtle_express')
     rospy.loginfo('Inited node turtle_express')
     rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, get_cur_pose)
     rospy.Subscriber('/mavros/battery', BatteryState, battery_update)
-#    get_telemetry = rospy.ServiceProxy('get_telemetry', srv.GetTelemetry)
+
 
     global my_poses
     global file_points
@@ -290,10 +284,15 @@ def main():
     except:
         my_poses = dict()
 
-#    global st
+    global st
     global navigator
-#    st = StateMachine()
+    global LOW_BAT
+
+    LOW_BAT = BatteryMonitor()
+    st = StateMachine()
     navigator = GoToPose()
+
+    
 
 #    global TOKEN
 #    global CHAT_ID
