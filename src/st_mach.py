@@ -17,7 +17,7 @@ from mavros_msgs.msg import camera_message_type
 class Base(smach.State):
     """
         INPUT:
-            База. Ждёт, пока дрон зарядится.
+            Dock charging.
         OUTPUT: Publisher('drone_state') => 'Ready'
     """
     def __init__(self):
@@ -43,7 +43,7 @@ class Bat_Monitor(smach.State):
     """
     def __init__(self):
         smach.State.__init__(self, outcomes=['low_bat', 'bat_error'])
-    def execute:
+    def execute(self):
         while True:
             time.sleep(1)
             try:
@@ -63,13 +63,13 @@ class Camera_Search(smach.State):
         INPUT: geometry_msgs/PoseArray.msg
             (std_msgs/Header header
             geometry_msgs/Pose[] poses
-        Сравнивает полученные координаты с уже имеющимися в логе (обрезает до int)
-        Если нет в списке - постит в топик 'drone_state' и дописывает лог
+        Compares with the history of detected objects
+        If not on list => appends list
         OUTPUT: Publisher('drone_state') => 'Object Found!"
     """
     def __init__(self):
         smach.State.__init__(self, outcomes=['object_detected'])
-    def execute:
+    def execute(self):
         while True:
             time.sleep(1)
             if object_spots:
@@ -87,9 +87,10 @@ class Flying(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['all_clear', 'preempted'])
     def execute(self, trajectory):
+        pub.publish('Search enable')
         for pose in trajectory:
             if self.preempt_requested():
-                rospy.loginfo("Полёт прерван")
+                rospy.loginfo("nich Flyght")
                 self.service_preempt()
                 return 'preempted'
 #                    TODO: 1. flying algoritm
@@ -109,7 +110,7 @@ class Hover(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['hovering_timeout'])
     def execute(self):
-        rospy.loginfo("Висит над объектом")
+        rospy.loginfo("Hovering over the detected object")
         pub.publish("Hovering")
         time.sleep(7)
         return 'hovering_timeout'
@@ -167,7 +168,7 @@ def main():
     rospy.loginfo('Inited node st_mach')
     st_mach_pub = rospy.Publisher('/drone_state', String, queue_size=10)
     rospy.Subscriber('/mavros/battery', BatteryState, battery_update)
-    rospy.Subscriber('/detected_object', PoseArray, HumFound)
+    rospy.Subscriber('/detected_objects', PoseArray, HumFound)
     
     objects_history = []
     
