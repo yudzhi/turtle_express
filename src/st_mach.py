@@ -176,7 +176,7 @@ def main():
     flying_concurrence = smach.Concurrence(outcomes=['patrol_done', 'low_bat'],
                                            default_outcome = 'patrol_done',
                                            child_termination_cb = child_term_cb,
-                                           outcome_cd = out_cb)
+                                           outcome_cb = out_cb)
 
     with flying_concurrence:
         smach.Concurrence.add('START_HOVERING', smach_ros.MonitorState("/sm_hover", Empty, monitor_cb))
