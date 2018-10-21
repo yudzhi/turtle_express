@@ -26,14 +26,14 @@ class Base(smach.State):
         while True:
             rospy.sleep(5)
             try:
-                if battery.voltage > 15.8:
+                if battery.voltage > 15.4:
                     rospy.loginfo("Low Battery, I need to go home, I'll be back")
                     pub.publish("Low Battery!")
                     return 'setup_done'
                     break
             except:
                 rospy.loginfo("Battery Error")
-                    return 'bat_error'
+                return 'bat_error'
 
 class Bat_Monitor(smach.State):
     """
@@ -101,7 +101,19 @@ class Landing(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['landing_succeded'])
     def execute(self):
-        pass
+        pub.publish("Return to base")
+        return 'landing_succeded'
+
+
+class Hover(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes = ['hovering_timeout'])
+    def execute(self):
+        rospy.loginfo("Висит над объектом")
+        pub.publish("Hovering")
+        time.sleep(7)
+        return 'hovering_timeout'
+
 
 # gets called when ANY child state terminates
 def child_term_cb(outcome_map):
@@ -178,10 +190,10 @@ def main():
                                transitions = {'setup_done' : 'FLYING', 'bat_error' : 'SHUT_DOWN'})
         smach.StateMachine.add('FLYING', Flying(),
                                transitions = {'patrol_done':'RETURN_TO_BASE', 'low_bat':'RETURN_TO_BASE'})
-        smach.StateMachine.add('RETURN_TO_BASE', Flying(),
-                               transitions = {'over_base':'LANDING'})
-        smach.StateMachine.add('LANDING', Landing(),
+        smach.StateMachine.add('RETURN_TO_BASE', Landing(),
                                transitions = {'landing_succeded':'charging'})
+        smach.StateMachine.add('HOVER', Hover(),
+                               transitions = {'hovering_timeout':'FLYING'})
 
     sis = smach_ros.IntrospectionServer('smach_server', sm, '/SM_ROOT')
     sis.start()
